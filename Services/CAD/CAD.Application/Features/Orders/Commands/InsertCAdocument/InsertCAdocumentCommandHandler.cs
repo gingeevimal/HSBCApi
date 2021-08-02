@@ -15,13 +15,13 @@ namespace Ordering.Application.Features.Orders.Commands.CheckoutOrder
     {
         private readonly ICAdocumentRepository _orderRepository;
         private readonly IMapper _mapper;
-        private readonly IEmailService _emailService;
+       // private readonly IEmailService _emailService;
         //private readonly ILogger<InsertCAdocumentCommandHandler> _logger;
         private readonly ILogger _logger;
 
         //public InsertCAdocumentCommandHandler(ICAdocumentRepository orderRepository, IMapper mapper, IEmailService emailService, ILogger<InsertCAdocumentCommandHandler> logger)
         //public InsertCAdocumentCommandHandler(ICAdocumentRepository orderRepository, IMapper mapper,ILogger<InsertCAdocumentCommandHandler> logger)
-        public InsertCAdocumentCommandHandler(ICAdocumentRepository orderRepository, IMapper mapper,ILogger logger)
+        public InsertCAdocumentCommandHandler(ICAdocumentRepository orderRepository, IMapper mapper, ILogger<InsertCAdocumentCommandHandler> logger)
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));

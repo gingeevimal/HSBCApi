@@ -16,9 +16,9 @@ namespace Ordering.Infrastructure.Repositories
 
         public async Task<IEnumerable<CAdocument>> GetOrdersByUserName(string userName)
         {
-            var orderList = await _dbContext.cadocuments
-                                .Where(o => o.businesspartner == userName)
-                                .ToListAsync();
+            var orderList = await _dbContext.cadocuments.ToListAsync(); 
+                                //.Where(o => o.IsInteresting)
+                                //.ToListAsync();
             return orderList;
         }
     }

@@ -44,16 +44,26 @@ namespace Ordering.API
             //        });
             //    });
             //});
-           // services.AddMassTransitHostedService();
+            // services.AddMassTransitHostedService();
 
             // General Configuration
-          //  services.AddScoped<BasketCheckoutConsumer>();
+            //  services.AddScoped<BasketCheckoutConsumer>();
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" });
             });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+                //.AllowCredentials());
+            });
+            services.AddMvc();
 
             services.AddHealthChecks().AddDbContextCheck<HSBCContext>();
             //services.AddDbContext<OrderContext>(ServiceLifetime.Scoped);
@@ -69,6 +79,7 @@ namespace Ordering.API
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ordering.API v1"));
             }
+            app.UseCors("CorsPolicy");
 
             app.UseRouting();
 

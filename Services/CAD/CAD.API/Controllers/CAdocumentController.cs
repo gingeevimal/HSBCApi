@@ -11,13 +11,18 @@ using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Saml;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.WsFederation;
 using System.Net.Http;
-using RestSharp;
 using System.Xml;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using CAD.API;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+
 
 namespace Ordering.API.Controllers
 {
@@ -28,12 +33,14 @@ namespace Ordering.API.Controllers
     {
         private readonly IMediator _mediator;
         private IWebHostEnvironment _hostEnvironment;
+        private IConfiguration _configuration;
 
 
-        public CAdocumentController(IMediator mediator, IWebHostEnvironment environment)
+        public CAdocumentController(IMediator mediator, IWebHostEnvironment environment, IConfiguration configuration)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _hostEnvironment = environment;
+            _configuration = configuration;
 
         }
 
@@ -82,12 +89,13 @@ namespace Ordering.API.Controllers
             await _mediator.Send(command);
             return NoContent();
         }
-        [HttpGet]
+        [AllowAnonymous]
+        [HttpPost]
         [Route("Login")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesDefaultResponseType]
-        public ActionResult Login()
+        //[ProducesResponseType(StatusCodes.Status204NoContent)]
+        //[ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[ProducesDefaultResponseType]
+        public object Login()
         {
            // SamlConsume();
             //TODO: specify the SAML provider url here, aka "Endpoint"
@@ -97,13 +105,17 @@ namespace Ordering.API.Controllers
             var request = new AuthRequest(
                 "https://hoekstra.dev/SAMLBlogPost", //TODO: put your app's "entity ID" here
                 "https://localhost:44373/api/v1/CAdocument/SamlConsume" //TODO: put Assertion Consumer URL (where the provider should redirect users after authenticating)
-                //"http://localhost:4200/" 
+                //"http://localhost:4200/#/login"
                 );
             //var request = new AuthRequest(
             //"http://www.myapp.com", //TODO: put your app's "entity ID" here
             //"http://www.myapp.com/SamlConsume" //TODO: put Assertion Consumer URL (where the provider should redirect users after authenticating)
             //);
             var redirectUrl = request.GetRedirectUrl(samlEndpoint);
+            //Process.Start(redirectUrl);
+            OpenBrowser(redirectUrl);
+      
+            return Redirect(redirectUrl);
 
             HttpClient client = new HttpClient();
 
@@ -126,10 +138,35 @@ namespace Ordering.API.Controllers
         //            });
                 });
             //redirect the user to the SAML provider
-            return Redirect(request.GetRedirectUrl(redirectUrl));
+            return Ok(redirectUrl);
             //return Challenge(
             //    new AuthenticationProperties { RedirectUri = redirectUrl },
             //    WsFederationDefaults.AuthenticationScheme);
+        }
+
+        public static void OpenBrowser(string url)
+        {
+        //    Process.Start(
+        //new ProcessStartInfo("cmd", $"/c start {url}")
+        //{
+        //    CreateNoWindow = true
+        //});
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Process.Start("xdg-open", url);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Process.Start("open", url);
+            }
+            else
+            {
+                // throw 
+            }
         }
         [HttpPost]
         [Route("SamlConsume")]
@@ -160,14 +197,25 @@ namespace Ordering.API.Controllers
 
                 //Some more optional stuff for you
                 //let's extract username/firstname etc
-                string username, email, firstname, lastname;
+                //string username, email, firstname, lastname;
                 try
                 {
-                    username = samlResponse.GetNameID();
-                    email = samlResponse.GetEmail();
-                    firstname = samlResponse.GetFirstName();
-                    lastname = samlResponse.GetLastName();
-                    return Ok(username);
+                    UserDetails user = 
+                        new UserDetails(samlResponse.GetNameID(), 
+                        samlResponse.GetEmail(), 
+                        samlResponse.GetFirstName(),
+                        samlResponse.GetLastName());
+                    //username = samlResponse.GetNameID();
+                    //email = samlResponse.GetEmail();
+                    //firstname = samlResponse.GetFirstName();
+                    //lastname = samlResponse.GetLastName();
+                    if (user != null)
+                    {
+                        var tokenString = GenerateJSONWebToken(user);
+                        //response = Ok(new { token = tokenString });
+                    }
+                    return Redirect("http://localhost:4200/#/login");
+                    //return Ok(username);
                 }
                 
                 catch (Exception ex)
@@ -180,7 +228,22 @@ namespace Ordering.API.Controllers
                 //user has been authenticated, put your code here, like set a cookie or something...
                 //or call FormsAuthentication.SetAuthCookie() or something
             }
-            return Ok(string.Empty);
+
+            return Redirect("http://localhost:4200/#/login");
+        }
+
+        private  string GenerateJSONWebToken(UserDetails userInfo)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
+              _configuration["Jwt:Issuer"],
+              null,
+              expires: DateTime.Now.AddMinutes(120),
+              signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

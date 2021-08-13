@@ -1,6 +1,7 @@
 //using EventBus.Messages.Common;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.WsFederation;
 //using MassTransit;
 using Microsoft.AspNetCore.Builder;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 //using Ordering.API.EventBusConsumer;
 using Ordering.Application;
@@ -16,6 +18,7 @@ using Ordering.Infrastructure;
 using Ordering.Infrastructure.Persistence;
 using Sustainsys.Saml2;
 using Sustainsys.Saml2.Metadata;
+using System.Text;
 
 namespace Ordering.API
 {
@@ -33,7 +36,20 @@ namespace Ordering.API
         {
             services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
-
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = Configuration["Jwt:Issuer"],
+            ValidAudience = Configuration["Jwt:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+        };
+    });
             // MassTransit-RabbitMQ Configuration
             //services.AddMassTransit(config => {
 

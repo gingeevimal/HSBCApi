@@ -88,21 +88,25 @@ namespace Ordering.API
             //})
             //.AddCookie();
 
-            services.AddAuthentication(sharedOptions =>
-            {
-                sharedOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                sharedOptions.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                sharedOptions.DefaultChallengeScheme = WsFederationDefaults.AuthenticationScheme;
-            })
-       .AddWsFederation(options =>
-       {
-           // this is where your AppID URI goes
-          // options.Wtrealm = "https://microsoft.onmicrosoft.com/5b60c247-398e-4c00-9ba4-a8xxxxxxxx4d1";
-           options.Wtrealm = "api://79d17639-e1f0-4b4d-9be5-624bf7738697";
-           //options.MetadataAddress = "https://login.microsoftonline.com/72f988bf-xxxx-41af-91ab-xxxxxxxxxxdb47/federationmetadata/2007-06/federationmetadata.xml";
-           options.MetadataAddress = "https://login.microsoftonline.com/b9165cc7-82cb-4b2f-86eb-f60b7e3809a5/federationmetadata/2007-06/federationmetadata.xml";
-       })
-       .AddCookie();
+
+            //services.AddAuthentication(sharedOptions =>
+            //{
+            //    sharedOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            //    sharedOptions.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            //    sharedOptions.DefaultChallengeScheme = WsFederationDefaults.AuthenticationScheme;
+            //})
+            //.AddWsFederation(options =>
+            //{
+            //    // this is where your AppID URI goes
+            //   // options.Wtrealm = "https://microsoft.onmicrosoft.com/5b60c247-398e-4c00-9ba4-a8xxxxxxxx4d1";
+            //    options.Wtrealm = "api://79d17639-e1f0-4b4d-9be5-624bf7738697";
+            //    //options.MetadataAddress = "https://login.microsoftonline.com/72f988bf-xxxx-41af-91ab-xxxxxxxxxxdb47/federationmetadata/2007-06/federationmetadata.xml";
+            //    options.MetadataAddress = "https://login.microsoftonline.com/b9165cc7-82cb-4b2f-86eb-f60b7e3809a5/federationmetadata/2007-06/federationmetadata.xml";
+            //})
+            //.AddCookie();
+
+            object p = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(Configuration, "AzureAd");
+            services.AddAuthorization();
 
             services.AddMvc();
             services.AddAutoMapper(typeof(Startup));
@@ -137,6 +141,7 @@ namespace Ordering.API
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ordering.API v1"));
             }
             app.UseCors("CorsPolicy");
+            //app.UseCors();
             app.UseAuthentication();
 
             app.UseRouting();

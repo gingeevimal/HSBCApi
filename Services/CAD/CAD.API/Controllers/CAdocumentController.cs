@@ -26,7 +26,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Ordering.API.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("api/v1/[controller]")]
     public class CAdocumentController : ControllerBase
@@ -189,7 +189,7 @@ namespace Ordering.API.Controllers
             //Saml.Response samlResponse = new Response(samlCertificate, Request.Form["SAMLResponse"]);
             string Samlresponse = Request.Form["Samlresponse"];
             Response samlResponse = new Response(samlCertificate, Samlresponse);
-
+            string tokenString = string.Empty;
             // 3. We're done!
             if (samlResponse.IsValid())
             {
@@ -211,10 +211,20 @@ namespace Ordering.API.Controllers
                     //lastname = samlResponse.GetLastName();
                     if (user != null)
                     {
-                        var tokenString = GenerateJSONWebToken(user);
+                         tokenString = GenerateJSONWebToken(user);
                         //response = Ok(new { token = tokenString });
                     }
-                    return Redirect("http://localhost:4200/#/login");
+                    string url = "http://localhost:4200/#/login";
+                    //return Redirect("http://localhost:4200/#/login");
+                    var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+                    response.Headers.Location = new Uri("http://localhost:4200/#/login");
+                    response.Headers.Add("JWTToken", tokenString);
+                    return Redirect(url);
+                    //return new ContentResult
+                    //{
+                    //    StatusCode = (int)HttpStatusCode.Redirect,
+                    //    Content = tokenString
+                    //};
                     //return Ok(username);
                 }
                 

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 //using Ordering.API.EventBusConsumer;
@@ -36,20 +37,20 @@ namespace Ordering.API
         {
             services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = Configuration["Jwt:Issuer"],
-            ValidAudience = Configuration["Jwt:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
-        };
-    });
+    //        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    //.AddJwtBearer(options =>
+    //{
+    //    options.TokenValidationParameters = new TokenValidationParameters
+    //    {
+    //        ValidateIssuer = true,
+    //        ValidateAudience = true,
+    //        ValidateLifetime = true,
+    //        ValidateIssuerSigningKey = true,
+    //        ValidIssuer = Configuration["Jwt:Issuer"],
+    //        ValidAudience = Configuration["Jwt:Issuer"],
+    //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+    //    };
+    //});
             // MassTransit-RabbitMQ Configuration
             //services.AddMassTransit(config => {
 
@@ -105,7 +106,8 @@ namespace Ordering.API
             //})
             //.AddCookie();
 
-            object p = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(Configuration, "AzureAd");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddMicrosoftIdentityWebApi(Configuration, "AzureAd");
             services.AddAuthorization();
 
             services.AddMvc();

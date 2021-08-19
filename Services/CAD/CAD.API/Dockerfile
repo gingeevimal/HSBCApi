@@ -12,7 +12,7 @@ COPY ["Services/CAD/CAD.Domain/CAD.Domain.csproj", "Services/CAD/CAD.Domain/"]
 COPY ["BuildingBlocks/EventBus.Messages/EventBus.Messages.csproj", "BuildingBlocks/EventBus.Messages/"]
 COPY ["Services/CAD/CAD.Infrastructure/CAD.Infrastructure.csproj", "Services/CAD/CAD.Infrastructure/"]
 COPY ["BuildingBlocks/Common.Logging/Common.Logging.csproj", "BuildingBlocks/Common.Logging/"]
-RUN dotnet restore "Services/CAD/Ordering.API/CAD.API.csproj"
+RUN dotnet restore "Services/CAD/CAD.API/CAD.API.csproj"
 COPY . .
 #WORKDIR "/src/Services/CAD/CAD.API"
 WORKDIR "./Services/CAD/CAD.API"
